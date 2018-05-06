@@ -27,18 +27,6 @@ public class Utils {
         return (XY + YZ + XZ + YX + ZY + ZX)/6.0f;
     }
 
-    //public static float FBM3D(float x, float y, float z, float sm = 0.01f, int oct = 1, float per = 0.5f) {
-    //    float XY = FBM(x * sm, y * sm, oct, per);
-    //    float YZ = FBM(y * sm, z * sm, oct, per);
-    //    float XZ = FBM(x * sm, z * sm, oct, per);
-
-    //    float YX = FBM(y * sm, x * sm, oct, per);
-    //    float ZX = FBM(z * sm, x * sm, oct, per);
-    //    float ZY = FBM(z * sm, y * sm, oct, per);
-
-    //    return (XY + YZ + XZ + YX + ZX + ZY) / 6.0f;
-    //}
-
     static float Map(float newMin, float newMax, float origMin, float origMax,float value) {
         float inverse = Mathf.InverseLerp(origMin, origMax, value);
         return Mathf.Lerp(newMin, newMax, inverse);
@@ -51,8 +39,11 @@ public class Utils {
         float amplitude = 1;
         float maxValue = 1;
 
+        // to avoid any negative values & mirroring
+        float offset = 32000;
+
         for (int i = 0; i < oct; i++) {
-            total += Mathf.PerlinNoise(x * frequency, z * frequency) * amplitude;
+            total += Mathf.PerlinNoise((x + offset) * frequency, (z + offset) * frequency) * amplitude;
 
             maxValue += amplitude;
 

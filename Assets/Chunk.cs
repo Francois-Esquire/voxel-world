@@ -22,10 +22,10 @@ public class Chunk {
                     int worldY = (int)(y + chunk.transform.position.y);
                     int worldZ = (int)(z + chunk.transform.position.z);
 
-                    //if (Utils.FBM3D(worldX, worldY, worldZ, 0.01f, 4) < 0.42f) type = Block.BlockType.AIR;
-                    if (Utils.FBM3D(worldX, worldY, worldZ, 0.01f, 3) < 0.285f) type = Block.BlockType.AIR;
+                    //if (Utils.FBM3D(worldX, worldY, worldZ, 0.1f, 3) < 0.285f) type = Block.BlockType.AIR;
+                    if (Utils.FBM3D(worldX, worldY, worldZ, 0.1f, 3) < 0.285f) type = Block.BlockType.AIR;
                     else if (worldY <= Utils.GenerateHeight(worldX, worldZ, 25, 1)) {
-                        if (Utils.FBM3D(worldX, worldY, worldZ, 0.01f, 2) < 0.26f) type = Block.BlockType.DIAMOND;
+                        if (Utils.FBM3D(worldX, worldY, worldZ, 0.01f, 2) < 0.23f) type = Block.BlockType.DIAMOND;
                         else type = Block.BlockType.STONE;
                     }
                     else if (worldY == Utils.GenerateHeight(worldX, worldZ)) type = Block.BlockType.GRASS;
@@ -49,6 +49,9 @@ public class Chunk {
 				}
 
 		CombineQuads();
+
+        MeshCollider collider = chunk.gameObject.AddComponent(typeof(MeshCollider)) as MeshCollider;
+        collider.sharedMesh = chunk.transform.GetComponent<MeshFilter>().mesh;
 	}
 
 	public Chunk(Vector3 position, Material c) {
