@@ -7,6 +7,8 @@ public class Chunk {
 	public Material cubeMaterial;
 	public Block[,,] chunkData;
 	public GameObject chunk;
+    public enum ChunkStatus { DONE, DRAW, KEEP };
+    public ChunkStatus status;
 
 	void BuildChunk() {
 		chunkData = new Block[World.chunkSize, World.chunkSize, World.chunkSize];
@@ -38,6 +40,8 @@ public class Chunk {
 						chunk.gameObject,
 						this
 					);
+
+                    status = ChunkStatus.DRAW;
 				}
 	}
 
