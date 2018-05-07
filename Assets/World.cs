@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
 using Realtime.Messaging.Internal;
+using UnityEngine;
 
 public class World : MonoBehaviour {
 
@@ -61,7 +61,7 @@ public class World : MonoBehaviour {
         }
     }
 
-    IEnumerator DumpGarbage() {
+    IEnumerator Dump() {
         for (int i = 0; i < garbage.Count; i++) {
             string n = garbage[i];
 
@@ -79,17 +79,39 @@ public class World : MonoBehaviour {
         }
     }
 
-    void BuildChunkAt(int x, int y, int z) {
-        Chunk c;
+    void Flush() {
+        queue.Run(Dump());
+    }
 
+    void DrawWorld() {
+        queue.Run(DrawChunks());
+    }
+
+    void BuildWorld() {
+        queue.Run(BuildRecursiveWorld(
+            (int)(player.transform.position.x / chunkSize),
+            (int)(player.transform.position.y / chunkSize),
+            (int)(player.transform.position.z / chunkSize),
+            radius
+        ));
+    }
+
+    void BuildChunk(int x, int y, int z, int rad) {
+        BuildChunkAt(x, y, z);
+
+        queue.Run(BuildRecursiveWorld(x, y, z, rad));
+    }
+
+    void BuildChunkAt(int x, int y, int z) {
         Vector3 chunkPosition = new Vector3(
                         x * chunkSize,
                         y * chunkSize,
                         z * chunkSize
                     );
 
-
         string n = BuildChunkName(chunkPosition);
+
+        Chunk c;
 
         if (!chunks.TryGetValue(n, out c))
         {
@@ -103,29 +125,6 @@ public class World : MonoBehaviour {
 
     public static string BuildChunkName(Vector3 v) {
         return (int)v.x + "_" + (int)v.y + "_" + (int)v.z;
-    }
-
-    void BuildChunk(int x, int y, int z, int rad) {
-        BuildChunkAt(x, y, z);
-
-        queue.Run(BuildRecursiveWorld(x, y, z, rad));
-    }
-
-    void BuildWorld() {
-        queue.Run(BuildRecursiveWorld(
-            (int)(player.transform.position.x / chunkSize),
-            (int)(player.transform.position.y / chunkSize),
-            (int)(player.transform.position.z / chunkSize),
-            radius
-        ));
-    }
-
-    void DrawWorld() {
-        queue.Run(DrawChunks());
-    }
-
-    void Flush() {
-        queue.Run(DumpGarbage());
     }
 
     void Start() {
