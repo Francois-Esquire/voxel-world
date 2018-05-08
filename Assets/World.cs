@@ -6,7 +6,7 @@ using UnityEngine;
 public class World : MonoBehaviour {
 
     public GameObject player;
-	public Material textureAtlas;
+    public Material textureAtlas;
 
     public static ConcurrentDictionary<string, Chunk> chunks;
 
@@ -16,9 +16,9 @@ public class World : MonoBehaviour {
 
     public static uint maxRoutines = 1000;
 
-	public static int columnHeight = 16;
-	public static int chunkSize = 16;
-	public static int worldSize = 1;
+	  public static int columnHeight = 16;
+    public static int chunkSize = 16;
+    public static int worldSize = 1;
     public static int radius = 4;
 
     Vector3 lastBuildPos;
@@ -115,7 +115,7 @@ public class World : MonoBehaviour {
 
         if (!chunks.TryGetValue(n, out c))
         {
-            c = new Chunk(chunkPosition, textureAtlas, n);
+            c = new Chunk(n, chunkPosition, textureAtlas);
 
             c.chunk.transform.parent = this.transform;
 
@@ -127,17 +127,22 @@ public class World : MonoBehaviour {
         return (int)v.x + "_" + (int)v.y + "_" + (int)v.z;
     }
 
+    void Awake() {
+      // resets origins
+      this.transform.position = Vector3.zero;
+      this.transform.rotation = Quaternion.identity;
+
+      // utility to call coroutines, with a cap
+      queue = new CoroutineQueue(maxRoutines, StartCoroutine);
+
+      // allowing us to safely thread through our dict
+      chunks = new ConcurrentDictionary<string, Chunk>();
+
+      // set player as inactive
+      player.SetActive(false);
+    }
+
     void Start() {
-        this.transform.position = Vector3.zero;
-        this.transform.rotation = Quaternion.identity;
-
-        queue = new CoroutineQueue(maxRoutines, StartCoroutine);
-
-        chunks = new ConcurrentDictionary<string, Chunk>();
-
-        // set player as inactive
-        player.SetActive(false);
-
         Vector3 ppos = player.transform.position;
 
         // set positions
@@ -160,17 +165,19 @@ public class World : MonoBehaviour {
     }
 
     void Update() {
-        Vector3 movement = lastBuildPos - player.transform.position;
-
-        if (movement.magnitude > chunkSize) {
-            lastBuildPos = player.transform.position;
-
-            StopCoroutine("BuildRecursiveWorld");
-
-            BuildWorld();
-        }
-
+        // activate player - initialization
         if (player.activeSelf == false) player.SetActive(true);
+        else {
+            Vector3 movement = lastBuildPos - player.transform.position;
+
+            if (movement.magnitude > chunkSize) {
+                lastBuildPos = player.transform.position;
+
+                StopCoroutine("BuildRecursiveWorld");
+
+                BuildWorld();
+            }
+        }
 
         DrawWorld();
         Flush();

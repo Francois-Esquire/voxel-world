@@ -1,61 +1,105 @@
 ﻿using UnityEngine;
 
 public class Block {
-	enum Cubeside {BOTTOM, TOP, LEFT, RIGHT, FRONT, BACK}
+	static string prefix = "ScriptedMesh";
 
-	public enum BlockType {GRASS, DIRT, STONE, DIAMOND, AIR};
+	enum Cubeside { BOTTOM, TOP, LEFT, RIGHT, FRONT, BACK };
 
-	public bool isSolid;
+	static Vector3 p0 = new Vector3( -0.5f, -0.5f,  0.5f );
+	static Vector3 p1 = new Vector3(  0.5f, -0.5f,  0.5f );
+	static Vector3 p2 = new Vector3(  0.5f, -0.5f, -0.5f );
+	static Vector3 p3 = new Vector3( -0.5f, -0.5f, -0.5f );
+	static Vector3 p4 = new Vector3( -0.5f,  0.5f,  0.5f );
+	static Vector3 p5 = new Vector3(  0.5f,  0.5f,  0.5f );
+	static Vector3 p6 = new Vector3(  0.5f,  0.5f, -0.5f );
+	static Vector3 p7 = new Vector3( -0.5f,  0.5f, -0.5f );
 
-	BlockType bType;
-	Vector3 position;
-	GameObject parent;
-	Chunk owner;
+	public enum BlockType { GRASS, DIRT, STONE, BEDROCK, REDSTONE, DIAMOND, AIR };
 
-	Vector2[,] blockUVs = {
+	static Vector2[,] blockUVs = {
 		{ /* GRASS TOP */
-			new Vector2( 0.125f,  0.375f  ), new Vector2( 0.1875f, 0.375f  ),
-			new Vector2( 0.125f,  0.4375f ), new Vector2( 0.1875f, 0.4375f )
+		    new Vector2( 0.125f,  0.375f  ), new Vector2( 0.1875f, 0.375f  ),
+		    new Vector2( 0.125f,  0.4375f ), new Vector2( 0.1875f, 0.4375f )
 		},
 		{ /* GRASS SIDE */
-			new Vector2( 0.1875f, 0.9375f ), new Vector2( 0.25f, 0.9375f ),
-			new Vector2( 0.1875f, 1.0f    ), new Vector2( 0.25f, 1.0f    )
+		    new Vector2( 0.1875f, 0.9375f ), new Vector2( 0.25f, 0.9375f ),
+		    new Vector2( 0.1875f, 1.0f    ), new Vector2( 0.25f, 1.0f    )
 		},
 		{ /* DIRT */
-			new Vector2( 0.125f, 0.9375f ), new Vector2( 0.1875f, 0.9375f ),
-			new Vector2( 0.125f, 1.0f    ), new Vector2( 0.1875f, 1.0f    )
+		    new Vector2( 0.125f, 0.9375f ), new Vector2( 0.1875f, 0.9375f ),
+		    new Vector2( 0.125f, 1.0f    ), new Vector2( 0.1875f, 1.0f    )
 		},
-        { /* STONE */
-            new Vector2( 0, 0.875f  ), new Vector2( 0.0625f, 0.875f  ),
-            new Vector2( 0, 0.9375f ), new Vector2( 0.0625f, 0.9375f )
-        },
-        { /* DIAMOND */
-			new Vector2( 0.125f, 0.75f  ), new Vector2( 0.1875f, 0.75f  ),
-			new Vector2( 0.125f, 0.8125f ), new Vector2( 0.1875f, 0.8125f )
+		{ /* STONE */
+		    new Vector2( 0, 0.875f  ), new Vector2( 0.0625f, 0.875f  ),
+		    new Vector2( 0, 0.9375f ), new Vector2( 0.0625f, 0.9375f )
+		},
+		{ /*BEDROCK*/
+				new Vector2( 0.3125f, 0.8125f ), new Vector2( 0.375f, 0.8125f),
+				new Vector2( 0.3125f, 0.875f  ), new Vector2( 0.375f, 0.875f )
+		},
+		{ /*REDSTONE*/
+				new Vector2( 0.1875f, 0.75f   ), new Vector2( 0.25f, 0.75f   ),
+				new Vector2( 0.1875f, 0.8125f ), new Vector2( 0.25f, 0.8125f )
+		},
+		{ /* DIAMOND */
+		    new Vector2( 0.125f, 0.75f   ), new Vector2( 0.1875f, 0.75f   ),
+		    new Vector2( 0.125f, 0.8125f ), new Vector2( 0.1875f, 0.8125f )
 		},
 	};
 
-	public Block(BlockType b, Vector3 pos, GameObject p, Chunk c) {
-		bType = b;
-		parent = p;
+	Chunk owner;
+	Vector3 position;
+	BlockType element;
+
+	public bool isSolid;
+
+	public Block(BlockType b, Vector3 pos, Chunk c) {
+		element = b;
 		position = pos;
 		owner = c;
 
-		if (bType == BlockType.AIR)
-			isSolid = false;
-		else
-			isSolid = true;
+		switch(element) {
+			default:
+				isSolid = true;
+				break;
+			case BlockType.AIR:
+				isSolid = false;
+				break;
+		}
+	}
+
+	public void Draw() {
+		if (isSolid) {
+			// Culling
+			if (!HasSolidNeighbour((int)position.x, (int)position.y, (int)position.z + 1))
+				CreateQuad(Cubeside.FRONT);
+			if (!HasSolidNeighbour((int)position.x, (int)position.y, (int)position.z - 1))
+				CreateQuad(Cubeside.BACK);
+			if (!HasSolidNeighbour((int)position.x, (int)position.y + 1, (int)position.z))
+				CreateQuad(Cubeside.TOP);
+			if (!HasSolidNeighbour((int)position.x, (int)position.y - 1, (int)position.z))
+				CreateQuad(Cubeside.BOTTOM);
+			if (!HasSolidNeighbour((int)position.x + 1, (int)position.y, (int)position.z))
+				CreateQuad(Cubeside.RIGHT);
+			if (!HasSolidNeighbour((int)position.x - 1, (int)position.y, (int)position.z))
+				CreateQuad(Cubeside.LEFT);
+		}
 	}
 
 	void CreateQuad(Cubeside side) {
-		Mesh mesh = new Mesh();
+		GameObject quad = new GameObject("quad");
 
-		mesh.name = "ScriptedMesh" + side.ToString();
+		quad.transform.position = position;
+		quad.transform.parent = owner.chunk.gameObject.transform;
+
+		MeshFilter meshFilter = (MeshFilter) quad.AddComponent(typeof(MeshFilter));
+
+		Mesh mesh = meshFilter.mesh = new Mesh();
+
+		mesh.name = prefix + side.ToString();
 
 		Vector3[] vertices = new Vector3[4];
 		Vector3[] normals = new Vector3[4];
-		Vector2[] uvs = new Vector2[4];
-		int[] triangles = new int[6];
 
 		// All Possible UV's
 		Vector2 uv00 = new Vector2( 0f, 0f );
@@ -63,31 +107,22 @@ public class Block {
 		Vector2 uv01 = new Vector2( 0f, 1f );
 		Vector2 uv11 = new Vector2( 1f, 1f );
 
-		if (bType == BlockType.GRASS && side == Cubeside.TOP) {
+		if (element == BlockType.GRASS && side == Cubeside.TOP) {
 			uv00 = blockUVs[0, 0];
 			uv10 = blockUVs[0, 1];
 			uv01 = blockUVs[0, 2];
 			uv11 = blockUVs[0, 3];
-		} else if (bType == BlockType.GRASS && side == Cubeside.TOP) {
+		} else if (element == BlockType.GRASS && side == Cubeside.BOTTOM) {
 			uv00 = blockUVs[(int)(BlockType.DIRT + 1), 0];
 			uv10 = blockUVs[(int)(BlockType.DIRT + 1), 1];
 			uv01 = blockUVs[(int)(BlockType.DIRT + 1), 2];
 			uv11 = blockUVs[(int)(BlockType.DIRT + 1), 3];
 		} else {
-			uv00 = blockUVs[(int)(bType + 1), 0];
-			uv10 = blockUVs[(int)(bType + 1), 1];
-			uv01 = blockUVs[(int)(bType + 1), 2];
-			uv11 = blockUVs[(int)(bType + 1), 3];
+			uv00 = blockUVs[(int)(element + 1), 0];
+			uv10 = blockUVs[(int)(element + 1), 1];
+			uv01 = blockUVs[(int)(element + 1), 2];
+			uv11 = blockUVs[(int)(element + 1), 3];
 		}
-
-		Vector3 p0 = new Vector3( -0.5f, -0.5f,  0.5f );
-		Vector3 p1 = new Vector3(  0.5f, -0.5f,  0.5f );
-		Vector3 p2 = new Vector3(  0.5f, -0.5f, -0.5f );
-		Vector3 p3 = new Vector3( -0.5f, -0.5f, -0.5f );
-		Vector3 p4 = new Vector3( -0.5f,  0.5f,  0.5f );
-		Vector3 p5 = new Vector3(  0.5f,  0.5f,  0.5f );
-		Vector3 p6 = new Vector3(  0.5f,  0.5f, -0.5f );
-		Vector3 p7 = new Vector3( -0.5f,  0.5f, -0.5f );
 
 		switch(side) {
 			case Cubeside.BOTTOM:
@@ -134,24 +169,13 @@ public class Block {
 			break;
 		}
 
-		uvs = new Vector2[] { uv11, uv01, uv00, uv10 };
-		triangles = new int[] { 3, 1, 0, 3, 2, 1 };
-
 		mesh.vertices = vertices;
 		mesh.normals = normals;
-		mesh.uv = uvs;
-		mesh.triangles = triangles;
+
+		mesh.uv = new Vector2[] { uv11, uv01, uv00, uv10 };
+		mesh.triangles = new int[] { 3, 1, 0, 3, 2, 1 };
 
 		mesh.RecalculateBounds();
-
-		GameObject quad = new GameObject("quad");
-
-		quad.transform.position = position;
-		quad.transform.parent = parent.transform;
-
-		MeshFilter meshFilter = (MeshFilter) quad.AddComponent(typeof(MeshFilter));
-
-		meshFilter.mesh = mesh;
 	}
 
 	int ConvertBlockIndexToLocal(int i) {
@@ -170,7 +194,7 @@ public class Block {
 			y < 0 || y >= World.chunkSize ||
 			z < 0 || z >= World.chunkSize
 		) {
-			Vector3 neighborurChunkPos = this.parent.transform.position + new Vector3(
+			Vector3 neighborurChunkPos = owner.chunk.gameObject.transform.position + new Vector3(
 				(x - (int)position.x) * World.chunkSize,
 				(y - (int)position.y) * World.chunkSize,
 				(z - (int)position.z) * World.chunkSize
@@ -178,42 +202,24 @@ public class Block {
 
 			string nName = World.BuildChunkName(neighborurChunkPos);
 
-			x = ConvertBlockIndexToLocal(x);
-			y = ConvertBlockIndexToLocal(y);
-			z = ConvertBlockIndexToLocal(z);
-
 			Chunk nChunk;
 
 			if (World.chunks.TryGetValue(nName, out nChunk)) {
+				x = ConvertBlockIndexToLocal(x);
+				y = ConvertBlockIndexToLocal(y);
+				z = ConvertBlockIndexToLocal(z);
 				chunks = nChunk.chunkData;
-			}
-			else return false;
-		} else {
+			} else return false;
+
+		} else
 			chunks = owner.chunkData;
-		}
 
 		try {
 			return chunks[x, y, z].isSolid;
-		} catch(System.IndexOutOfRangeException ex) {}
+		} catch(System.IndexOutOfRangeException ex) {
+			/* Catcher - No Need To Do Anything */
+		}
 
 		return false;
-	}
-
-	// Culling
-	public void Draw() {
-		if (bType == BlockType.AIR) return;
-
-		if (!HasSolidNeighbour((int)position.x, (int)position.y, (int)position.z + 1))
-			CreateQuad(Cubeside.FRONT);
-		if (!HasSolidNeighbour((int)position.x, (int)position.y, (int)position.z - 1))
-			CreateQuad(Cubeside.BACK);
-		if (!HasSolidNeighbour((int)position.x, (int)position.y + 1, (int)position.z))
-			CreateQuad(Cubeside.TOP);
-		if (!HasSolidNeighbour((int)position.x, (int)position.y - 1, (int)position.z))
-			CreateQuad(Cubeside.BOTTOM);
-		if (!HasSolidNeighbour((int)position.x + 1, (int)position.y, (int)position.z))
-			CreateQuad(Cubeside.RIGHT);
-		if (!HasSolidNeighbour((int)position.x - 1, (int)position.y, (int)position.z))
-			CreateQuad(Cubeside.LEFT);
 	}
 }
