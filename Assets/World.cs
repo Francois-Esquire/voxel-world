@@ -16,7 +16,7 @@ public class World : MonoBehaviour {
 
     public static uint maxRoutines = 1000;
 
-	  public static int columnHeight = 16;
+    public static int columnHeight = 16;
     public static int chunkSize = 16;
     public static int worldSize = 1;
     public static int radius = 4;
@@ -69,6 +69,8 @@ public class World : MonoBehaviour {
 
             if (chunks.TryGetValue(n, out c)) {
                 Destroy(c.chunk);
+
+                c.Save();
 
                 chunks.TryRemove(n, out c);
 
@@ -143,6 +145,7 @@ public class World : MonoBehaviour {
     }
 
     void Start() {
+        Debug.Log(Application.persistentDataPath);
         Vector3 ppos = player.transform.position;
 
         // set positions
