@@ -49,7 +49,7 @@ public class Block {
 		{ /* DIAMOND */
 		    new Vector2( 0.125f, 0.75f   ), new Vector2( 0.1875f, 0.75f   ),
 		    new Vector2( 0.125f, 0.8125f ), new Vector2( 0.1875f, 0.8125f )
-		},
+		}
 	};
 
     public enum Healthstate { NOCRACK, CRACK1, CRACK2, CRACK3, CRACK4 };
@@ -76,7 +76,7 @@ public class Block {
             new Vector2( 0.1875f, 0.0625f ), new Vector2( 0.25f, 0.0625f )
         }
     };
-    	
+
     public bool isSolid;
     public int hitpoints;
     public Healthstate health;
@@ -130,6 +130,8 @@ public class Block {
 	public void Draw() {
 		if (isSolid) {
             // TODO: could be optimized, no need to check for inner blocks.
+            // possibly set checks from within constructor - assign a var isEdge
+            // could be extended with edge types such as corner.
 
 			// Culling
 			if (!HasSolidNeighbour((int)position.x, (int)position.y, (int)position.z + 1))

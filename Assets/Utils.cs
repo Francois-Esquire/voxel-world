@@ -2,6 +2,9 @@ using UnityEngine;
 
 public class Utils {
 
+    // to avoid any negative values & mirroring
+    static float offset = 32000;
+
     static int maxHeight = 150;
     static float smooth = 0.01f;
     static int octaves = 4;
@@ -27,7 +30,7 @@ public class Utils {
         return (XY + YZ + XZ + YX + ZY + ZX)/6.0f;
     }
 
-    static float Map(float newMin, float newMax, float origMin, float origMax,float value) {
+    static float Map(float newMin, float newMax, float origMin, float origMax, float value) {
         float inverse = Mathf.InverseLerp(origMin, origMax, value);
         return Mathf.Lerp(newMin, newMax, inverse);
     }
@@ -38,9 +41,6 @@ public class Utils {
         float frequency = 1;
         float amplitude = 1;
         float maxValue = 1;
-
-        // to avoid any negative values & mirroring
-        float offset = 32000;
 
         for (int i = 0; i < oct; i++) {
             total += Mathf.PerlinNoise((x + offset) * frequency, (z + offset) * frequency) * amplitude;
